@@ -26,4 +26,5 @@ Never cite architecture docs as evidence. They are navigation aids for humans.
 @dev-tools/skills/socrates-socratic.md
 @dev-tools/skills/socrates-focus.md
 @dev-tools/skills/socrates-propose.md
+@dev-tools/skills/caveman.md
 @dev-tools/steering-guide.md

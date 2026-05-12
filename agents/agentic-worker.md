@@ -34,4 +34,5 @@ After writing PLAN.md or TASK.md, update context.json with
 @dev-tools/skills/agentic-worker-plan.md
 @dev-tools/skills/agentic-worker-tasks.md
 @dev-tools/skills/agentic-worker-execute.md
+@dev-tools/skills/caveman.md
 @dev-tools/steering-guide.md

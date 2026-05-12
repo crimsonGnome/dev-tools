@@ -1,0 +1,15 @@
+[Unit]
+Description=Discord Orchestrator
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=REPO_ROOT_PLACEHOLDER
+ExecStart=REPO_ROOT_PLACEHOLDER/dev-tools/discord-orchestrator/bin/discord-orchestrator
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

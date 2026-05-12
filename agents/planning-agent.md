@@ -23,4 +23,5 @@ Conventions, interface boundaries, and testing strategy defined here are binding
 @dev-tools/skills/pair-programming.md
 @dev-tools/skills/pair-programming-evaluate.md
 @dev-tools/skills/transition-doc.md
+@dev-tools/skills/caveman.md
 @dev-tools/steering-guide.md

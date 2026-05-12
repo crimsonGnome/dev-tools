@@ -1,0 +1,9 @@
+{
+  "discord_token": "YOUR_BOT_TOKEN_HERE",
+  "authorized_user_id": "YOUR_DISCORD_USER_ID_HERE",
+  "sessions": {
+    "socrates": { "cmd": "agent-socrates" },
+    "pair-programming": { "cmd": "agent-pair-programming" },
+    "agentic-worker": { "cmd": "agent-agentic-worker" }
+  }
+}

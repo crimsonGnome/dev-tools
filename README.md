@@ -35,7 +35,7 @@ This opens a Claude Code session with that agent's identity and skills pre-loade
 |---|---|---|
 | `agent-pair-programming` | `agents/planning-agent.md` | Stress-test plans, resolve architecture decisions, write shared-understanding.md. Evaluates agentic-worker artifacts. |
 | `agent-socrates` | `agents/socrates.md` | Index packages, teach through Socratic questioning, scope problems, propose solutions |
-| `agent-worker` | `agents/agentic-worker.md` | Implement designs from shared-understanding.md — plan, task, execute with evaluation gates |
+| `agent-agentic-worker` | `agents/agentic-worker.md` | Implement designs from shared-understanding.md — plan, task, execute with evaluation gates |
 
 ---
 
@@ -55,13 +55,14 @@ The next agent picks up `.context.md` automatically at launch.
 
 1. Create a skill file in `dev-tools/skills/your-skill.md`
 2. Create an agent file in `dev-tools/agents/your-agent.md` that composes skills via `@`
-3. Add an alias to `install.sh` and re-run it:
+3. Add a shell function to `install.sh` and re-run it:
 
 ```bash
-alias agent-yourname="claude --system-prompt \"$(cat dev-tools/agents/your-agent.md)\""
+agent-yourname() { claude --system-prompt "$(cat dev-tools/agents/your-agent.md)" "$@"; }
 ```
 
 4. Run `source ~/.bashrc`
+5. Add the session to `dev-tools/discord-orchestrator/config.json` if you want the orchestrator to manage it
 
 ---
 
@@ -69,14 +70,26 @@ alias agent-yourname="claude --system-prompt \"$(cat dev-tools/agents/your-agent
 
 ```
 dev-tools/
-├── agents/          # Agent identities (--system-prompt targets)
-├── skills/          # Atomic, reusable skill files
-├── steering/        # Per-package CLAUDE.md templates
-├── transitions/     # Session handoff docs
-├── scripts/         # Workspace and setup scripts
-├── docs/            # ADRs and methodology docs
-├── steering-guide.md  # Agent and skill design principles
-└── install.sh       # Wires everything up
+├── agents/                    # Agent identities (--system-prompt targets)
+├── skills/                    # Atomic, reusable skill files
+├── steering/                  # Per-package CLAUDE.md templates
+├── transitions/               # Session handoff docs
+├── scripts/                   # Workspace and setup scripts
+├── docs/                      # ADRs and methodology docs
+├── discord-orchestrator/      # Discord bot daemon — manages agent tmux sessions
+│   ├── main.go
+│   ├── go.mod / go.sum
+│   ├── config.example.json    # Copy to config.json and fill in token + user ID
+│   ├── discord-orchestrator.service  # Systemd unit template
+│   ├── .gitignore             # Excludes config.json, logs/, bin/
+│   └── internal/
+│       ├── bot/               # Discord session, command dispatch, flag parsing
+│       ├── config/            # Config loading + validation
+│       ├── files/             # Log tailing, file chunking
+│       ├── session/           # tmux lifecycle (start/stop/inject/status/list)
+│       └── state/             # State persistence (atomic JSON)
+├── steering-guide.md          # Agent and skill design principles
+└── install.sh                 # Wires everything up + builds/installs orchestrator
 
 agentAI/             # Agent I/O directory — all agent outputs live here
 ├── socrates/
@@ -126,7 +139,7 @@ agent-pair-programming (design authority)
                        → agentAI/pair-programming/questions-log.md
   └── evaluate         → agentAI/pair-programming/evaluation.md (PASS | FAIL)
 
-agent-worker (implementation — gated by pair-programming evaluation)
+agent-agentic-worker (implementation — gated by pair-programming evaluation)
   └── Gate 1: PLAN.md  ──► agent-pair-programming evaluates ──► pass/fail loop
   └── Gate 2: TASK.md  ──► agent-pair-programming evaluates ──► pass/fail loop
   └── Phase 3: Execute
@@ -140,6 +153,52 @@ agent-worker (implementation — gated by pair-programming evaluation)
 Index → Focus → Propose  (hard stop at each gate)
 Socratic runs independently
 ```
+
+---
+
+## Discord Orchestrator
+
+A persistent Go daemon that lets you manage agent sessions from Discord DMs. Always running as a systemd user service — survives reboots.
+
+### First-time setup
+
+```bash
+cp dev-tools/discord-orchestrator/config.example.json dev-tools/discord-orchestrator/config.json
+# Edit config.json — fill in discord_token and authorized_user_id
+source dev-tools/install.sh
+```
+
+`install.sh` builds the binary and installs the systemd service automatically.
+
+### Discord commands
+
+```
+start <name>                         Start a named agent session
+stop <name>                          Kill a session
+restart <name>                       Stop then start
+list                                 List all sessions and statuses
+status <name>                        Single session status
+inject --session <name> --message "…"   Send a message into a session
+inject --session <name> --file <path>   Inject file contents into a session
+send --file <path>                   Send file tail (last 50KB)
+send --file <path> --full            Send entire file in chunks
+send --log <name>                    Send session log tail (last 50KB)
+send --log <name> --full             Send full session log in chunks
+tail --session <name> [--lines N]    Send last N lines of session log (default 20)
+ping                                 Uptime + running session count
+reload                               Reload state from disk
+help                                 Print command list
+```
+
+### Known sessions (pre-configured)
+
+| Session name | Agent |
+|---|---|
+| `socrates` | Socrates teaching agent |
+| `pair-programming` | Pair-programming / design agent |
+| `agentic-worker` | Agentic worker / implementation agent |
+
+Add new sessions by editing `config.json` — no code changes needed.
 
 ---
 
